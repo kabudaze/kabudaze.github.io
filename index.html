@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>キャラクターを集めろ！</title>
+    <style>
+        /* ボスファイト用スタイル */
+        #bossBattleScreen {
+            text-align: center;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .boss-card {
+            border: 2px solid #555;
+            padding: 10px;
+            margin: 10px;
+            display: inline-block;
+            width: 200px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #333;
+        }
+
+        .boss-card:hover {
+            border-color: gold;
+            transform: scale(1.05);
+        }
+
+        .boss-card img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        #battleArea {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hp-container {
+            width: 80%;
+            background: #444;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #fff;
+        }
+
+        .hp-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        #bossHpBar {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+        }
+
+        #playerHpBar {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+        }
+
+        .hp-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            line-height: 30px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #rhythmIndicator {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px;
+            min-height: 1.5em;
+            color: #00ffff;
+        }
+
+        .perfect-text {
+            animation: pulse-text 0.5s;
+            color: gold !important;
+        }
+
+        @keyframes pulse-text {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.5);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .party-selection {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .party-slot {
+            border: 2px dashed #777;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #222;
+            border-radius: 10px;
+        }
+
+        .party-slot img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 10px;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        #headerArea {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-links a {
+            margin-right: 10px;
+        }
+
+        #coinDisplay {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6600;
+        }
+
+        .container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* 画像のコピー・保存禁止設定 */
+        img {
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-user-drag: none;
+        }
+
+        #collectionHeader p {
+            font-size: 14px;
+            margin: 0 0 10px 0;
+        }
+
+        #collectionList {
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .collectionItem {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1px 0;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .collectionItem button {
+            font-size: 9px;
+            padding: 1px 3px;
+        }
+
+        .character-img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            margin-right: 5px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        /* 合成素材リスト内の画像サイズ */
+        .fusion-material-img {
+            width: 20px;
+            height: 20px;
+            object-fit: cover;
+            margin-right: 5px;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+
+        .reversal-char-img,
+        .fusion-char-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            margin-right: 5px;
+            border-radius: 3px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .fusion-char-img {
+            display: block;
+            margin: 10px 0;
+        }
+
+        #reversalScreen button,
+        #fusionScreen button {
+            margin-top: 10px;
+            padding: 5px 10px;
+        }
+
+        .reversalItem,
+        .fusionRecipe {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .reversalRequirement,
+        .fusionRequirement {
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .common {
+            background-color: #e0e0e0;
+        }
+
+        .rare {
+            background-color: #a0f0a0;
+        }
+
+        .epic {
+            background-color: #a0c0ff;
+        }
+
+        .legendary {
+            background-color: #ffda73;
+        }
+
+        .mythic {
+            background-color: #ffb3ff;
+        }
+
+        .penguinGod {
+            background-color: #4dc3ff;
+            color: #fff;
+        }
+
+        .secretPenguin {
+            background-color: #ff6666;
+            color: #fff;
+        }
+
+        .searcret {
+            background-color: #33cc33;
+            color: #fff;
+        }
+
+        .bakushi {
+            background-color: #555;
+            color: #eee;
+        }
+
+        .goat {
+            background-color: #00ffff;
+            color: #000;
+            border: 2px solid #005555;
+            font-weight: bold;
+        }
+
+        /* 新ランク: Goat */
+
+        .mutated {
+            border: 2px solid orange;
+            font-weight: bold;
+            background-color: #ffe0b3;
+        }
+
+        #gameArea {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gameImage {
+            max-width: 100%;
+            max-height: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        #getMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+        }
+
+        .char-img-placeholder {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+
+        .char-img-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #currentCharacterInfo {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #000;
+        }
+
+        .owned-char-item {
+            text-align: center;
+            width: 130px;
+            border: 1px solid #eee;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: inline-block;
+        }
+
+        .owned-char-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .owned-char-info {
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        @keyframes lightning-pulse {
+
+            0%,
+            100% {
+                border-color: gold;
+                box-shadow: 0 0 10px gold, 0 0 20px yellow;
+            }
+
+            50% {
+                border-color: #00ffff;
+                box-shadow: 0 0 10px #00ffff, 0 0 20px aqua;
+            }
+        }
+
+        .lightning-effect {
+            animation: lightning-pulse 0.5s infinite alternate;
+            background-color: #333;
+            color: #fff;
+            border: 3px solid;
+        }
+
+        .fusion-material-list {
+            margin-top: 10px;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px inset #eee;
+            padding: 5px;
+            background: #fff;
+        }
+
+        /* ガチャ演出用オーバーレイ */
+        #gachaOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+        }
+
+        #gachaAnimationImg {
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .atari-effect {
+            animation: gacha-shake 0.2s infinite;
+            border: 5px solid gold;
+            border-radius: 20px;
+        }
+
+        @keyframes gacha-shake {
+            0% {
+                transform: scale(1) rotate(0);
+            }
+
+            25% {
+                transform: scale(1.1) rotate(2deg);
+            }
+
+            50% {
+                transform: scale(1) rotate(0);
+            }
+
+            75% {
+                transform: scale(1.1) rotate(-2deg);
+            }
+        }
+
+        .explosion {
+            animation: explosion-anim 0.5s forwards;
+        }
+
+        @keyframes explosion-anim {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        #gachaResultDisplay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 3px solid #333;
+            z-index: 10000;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            text-align: center;
+            display: none;
+        }
+
+        .gacha-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Goat演出 */
+        @keyframes goat-flash {
+            0% {
+                background-color: #00ffff;
+            }
+
+            50% {
+                background-color: #ffffff;
+            }
+
+            100% {
+                background-color: #00ffff;
+            }
+        }
+
+        .goat-flash-effect {
+            animation: goat-flash 0.5s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div id="headerArea">
+            <div class="nav-links">
+                <a href="#" onclick="showUserScreen()">ゲーム画面</a> |
+                <a href="#" onclick="showShopScreen()">ショップ</a> |
+                <a href="#" onclick="showOwnedCharactersScreen()">もっているキャラ</a> |
+                <a href="#" onclick="showCollectionScreen()">図鑑</a> | <a href="#"
+                    onclick="showReversalScreen()">リバース</a> |
+                <a href="#" onclick="showFusionScreen()">合成</a> |
+                <a href="#" onclick="showBossBattleScreen()">ボスファイト</a> |
+                <a href="#" onclick="showAdminScreen()">管理者画面</a>
+            </div>
+            <div id="coinDisplay">コイン: 0</div>
+        </div>
+    </header>
+
+    <main>
+        <div id="bossBattleScreen" class="container hidden">
+            <h1>ボスファイト</h1>
+            <div id="bossSelectionArea">
+                <h3>戦うボスを選択してください</h3>
+                <div class="boss-card" onclick="prepareBattle('if1')">
+                    <img src="if1.png">
+                    <h4>ペンギン王</h4>
+                    <p>HP: 100,000 / ATK: 3,000</p>
+                </div>
+                <div class="boss-card" onclick="prepareBattle('if')">
+                    <img src="if.png">
+                    <h4>泥団子ペンギン</h4>
+                    <p>HP: 200,000 / ATK: 5,000</p>
+                </div>
+                <div class="boss-card" onclick="prepareBattle('if3')">
+                    <img src="if3.png">
+                    <h4>ペンギンking</h4>
+                    <p>HP: 200,000 / ATK: 50,000</p>
+                </div>
+            </div>
+
+            <div id="partySetupArea" class="hidden">
+                <h3>パーティ編成（5体選んでください）</h3>
+                <div class="party-selection" id="partySlots">
+                    <div class="party-slot">1</div>
+                    <div class="party-slot">2</div>
+                    <div class="party-slot">3</div>
+                    <div class="party-slot">4</div>
+                    <div class="party-slot">5</div>
+                </div>
+                <button onclick="startBossFight()"
+                    style="font-size: 20px; padding: 10px 40px; background: #e74c3c; color: white;">戦闘開始！</button>
+                <button onclick="cancelBattle()">戻る</button>
+                <div id="playerStatsPreview" style="margin-top: 15px; font-weight: bold;"></div>
+            </div>
+
+            <div id="battleActiveArea" class="hidden">
+                <h2 id="activeBossName">BOSS BATTLE</h2>
+                <div id="battleArea">
+                    <div class="hp-container">
+                        <div class="hp-text">BOSS HP: <span id="bossHpText"></span></div>
+                        <div id="bossHpBar" class="hp-bar"></div>
+                    </div>
+                    <img id="activeBossImg"
+                        style="width: 250px; height: 250px; border-radius: 15px; box-shadow: 0 0 20px red;">
+                    <div id="rhythmIndicator">READY...</div>
+                    <div class="hp-container">
+                        <div class="hp-text">PLAYER HP: <span id="playerHpText"></span></div>
+                        <div id="playerHpBar" class="hp-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="userScreen" class="container hidden">
+            <h2>キャラクターリスト</h2>
+            <div id="collectionHeader">
+                <p>所持枠: <span id="inventoryCount">0</span> / <span id="inventoryCapacity">0</span> | 所持ブースター: <span
+                        id="boosterCountDisplay">0</span>/2 | ショップ変異ブースト: <span id="mutationBoostDisplay">0</span>分 |
+                    リバース変異ブースト: <span id="reversalBoostDisplay">0</span>分</p>
+                <div>
+                    <span>
+                        <button onclick="sellSelectedCharacters()">選択したキャラクターを売却</button>
+                        <button onclick="clearSelection()">選択を解除</button>
+                    </span>
+                    <button onclick="sellAllCharacters()">すべて売却</button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button onclick="sellAllExceptSecret()">シークレット以外売却</button>
+                    <button onclick="sellAllExceptPenguinGodAndSecret()">P-God & シク以外売却</button>
+                </div>
+            </div>
+            <div id="collectionList">リストは空です。キャラクターをGETしてください。</div>
+
+            <h1>キャラクターを集めろ！</h1>
+            <p id="currentCharacterInfo">キャラクターが出現するのを待っています...</p>
+            <p>キャラクターは5秒ごとに自動で出現します。クリックして捕獲してください。</p>
+
+            <div id="goatMoneyArea" style="margin-bottom: 10px; display:none;">
+                <button onclick="collectGoatMoney()"
+                    style="background: #00ffff; font-weight: bold; padding: 10px;">書記長マネーを回収: <span
+                        id="goatMoneyValue">0</span>コイン</button>
+            </div>
+
+            <div id="gameArea" onclick="captureCharacter()">
+                <div id="getMessage" style="display: none;">GET!</div>
+            </div>
+            <button id="skipBtn" onclick="skipTimerAndGenerate()">すぐに次のキャラクターを生成</button>
+        </div>
+
+        <div id="shopScreen" class="container hidden">
+            <h1>ショップ</h1>
+            <div id="gachaArea"
+                style="border: 4px double orange; padding: 15px; background-color: #fff9e6; margin-bottom: 20px;">
+                <h2 style="margin-top: 0; color: #d35400;">🎰 爆死か、ぷーちゃんか。ガチャ</h2>
+                <p>1%の確率で <strong>ぷーちゃん(SecretPenguin)</strong> が出現！<br>
+                    残りは <strong>Bakushi(b1～b10)</strong> が出現します。</p>
+                <p id="gachaCeilingInfo" style="font-weight: bold; color: #e74c3c;">天井まであと: <span
+                        id="ceilingCountDisplay">100</span>回</p>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="playGacha(1)"
+                        style="flex:1; padding: 10px; background: #ffcc00; font-weight: bold; cursor: pointer;">1回引く<br>(10000コイン)</button>
+                    <button onclick="playGacha(10)"
+                        style="flex:1; padding: 10px; background: #ff9900; font-weight: bold; color: white; cursor: pointer;">10回引く<br>(90000コイン)</button>
+                </div>
+            </div>
+            <hr>
+            <div id="capacityBuyArea">
+                <p>基地（所持枠）拡張 (1枠: 5000コイン)</p>
+                <input type="range" id="capacityRange" min="1" max="100" value="1" oninput="updateCapacityCost()">
+                <span id="capacityQuantity">1枠</span>
+                <span id="capacityCost"> (合計 5000コイン)</span>
+                <button onclick="buyInventoryCapacitySlider()">選択した枠数を購入</button>
+            </div>
+            <hr>
+            <div class="shopItem">
+                <p>変異ブースト (1分間変異確率50%アップ: 10000コイン)</p>
+                <input type="range" id="mutationBoostRange" min="1" max="60" value="1"
+                    oninput="updateMutationBoostCost()">
+                <span id="mutationBoostQuantity">1分</span>
+                <span id="mutationBoostCost"> (合計 10000コイン)</span>
+                <button onclick="buyMutationBoostSlider()">選択した時間分購入</button>
+            </div>
+            <hr>
+            <div class="shopItem">
+                <p>ブースター購入 +1個 (99999999999コイン)</p>
+                <button onclick="buyBooster()">購入</button>
+            </div>
+        </div>
+
+        <div id="ownedCharactersScreen" class="container hidden">
+            <h1>キャラクターリスト</h1>
+            <p>所持している全キャラクターの画像と変異倍率を確認できます。</p>
+            <div id="ownedCharactersList"
+                style="display: flex; flex-wrap: wrap; gap: 20px; padding: 10px; border: 1px solid #ddd;">
+            </div>
+        </div>
+        <div id="collectionScreen" class="container hidden">
+            <h1>図鑑</h1>
+            <p>※図鑑には、リセットしない限り一度でも捕獲したキャラクターが表示されます。</p>
+            <div id="collectedImages" style="display: flex; flex-wrap: wrap; gap: 10px;">
+            </div>
+        </div>
+
+        <div id="reversalScreen" class="container hidden">
+            <h1>リバース（昇華）</h1>
+            <p>特定のキャラクターを消費することでレベルアップし、豪華な報酬を獲得できます。</p>
+            <div id="reversalLevels">
+            </div>
+        </div>
+
+        <div id="fusionScreen" class="container hidden">
+            <h1>合成</h1>
+            <p>特定のキャラクターとコインを消費することで、強力なキャラクターを確率で手に入れることができます。<br>素材にチェックを入れてから合成ボタンを押してください。</p>
+            <div id="fusionRecipes">
+            </div>
+        </div>
+
+        <div id="adminScreen" class="container hidden">
+            <h1>管理者設定画面</h1>
+            <p>確率を設定・保存できます（合計100%）。</p>
+            <div>
+                <label>Common (<span id="prob_common"></span>%): <input type="number" id="chance_common" min="0"
+                        max="100"></label><br>
+                <label>Rare (<span id="prob_rare"></span>%): <input type="number" id="chance_rare" min="0"
+                        max="100"></label><br>
+                <label>Epic (<span id="prob_epic"></span>%): <input type="number" id="chance_epic" min="0"
+                        max="100"></label><br>
+                <label>Legendary (<span id="prob_legendary"></span>%): <input type="number" id="chance_legendary"
+                        min="0" max="100"></label><br>
+                <label>Mythic (<span id="prob_mythic"></span>%): <input type="number" id="chance_mythic" min="0"
+                        max="100"></label><br>
+                <label>PenguinGod (<span id="prob_penguinGod"></span>%): <input type="number" id="chance_penguinGod"
+                        min="0" max="100"></label><br>
+                <label>SecretPenguin (<span id="prob_secretPenguin"></span>%): <input type="number"
+                        id="chance_secretPenguin" min="0" max="100"></label><br>
+                <label>Goat (<span id="prob_goat"></span>%): <input type="number" id="chance_goat" min="0" max="100"
+                        step="0.01"></label><br>
+            </div>
+            <label>初期所持枠設定: <input type="number" id="adminInitialCapacity" min="1" value="20"></label><br>
+            <label>変異モードON: <input type="checkbox" id="mutationModeToggle"></label><br>
+            <label>全キャラクター出現モード (ON: ON/OFF設定を無視して全キャラ出現): <input type="checkbox"
+                    id="allCharsForcedOnToggle"></label><br>
+
+            <div style="margin: 10px 0;">
+                <button onclick="saveAdminSettings()">設定を保存</button>
+                <button onclick="resetChancesAdmin()" style="background-color: #ffcccc;">確率をリセット</button>
+            </div>
+
+            <h2>リバースレベル設定</h2>
+            <label>現在のリバースレベル: <span id="currentReversalLevelDisplay">0</span> (Max 15)</label><br>
+            <label>リバースレベル (0〜15): <input type="number" id="adminReversalLevel" min="0" max="15"></label><br>
+
+            <button onclick="addCoins(1000)">1000コイン追加</button>
+            <button onclick="getPenguinCombinationAdmin()">Penguin Combinationを即時ゲット (確定50%)</button>
+            <p id="statusMessage" style="color: green;"></p>
+
+            <h2>指定キャラクターを即時出現 (テスト用)</h2>
+            <select id="adminCharSelector"></select>
+            <button onclick="adminGenerateSpecificCharacter()">出現させる</button>
+            <h2>キャラクター出現ON/OFF</h2>
+            <div id="charOnOffArea">
+            </div>
+            <button onclick="saveCharacterEnabledStatus()">キャラクターON/OFFを保存</button>
+            <button onclick="resetGameData()">ゲームデータ完全リセット</button>
+        </div>
+    </main>
+
+    <div id="gachaOverlay">
+        <img id="gachaAnimationImg" src="gr.png">
+    </div>
+    <div id="gachaResultDisplay">
+        <h2 id="gachaResultTitle">ガチャ結果</h2>
+        <div id="gachaResultList" class="gacha-grid"></div>
+        <button onclick="closeGachaResult()" style="margin-top: 20px; padding: 10px 20px;">閉じる</button>
+    </div>
+
+    <script>
+        // --- 定数と初期データ ---
+        const baseRarityPrices = {
+            common: 10, rare: 50, epic: 100, legendary: 200, mythic: 1000,
+            penguinGod: 3000, secretPenguin: 10000,
+            searcret: 50000,
+            goat: 100000, // 新ランク価格
+            bakushi: 1000
+        };
+        const defaultChances = { common: 39.99, rare: 25, epic: 15, legendary: 10, mythic: 5, penguinGod: 4, secretPenguin: 1, goat: 0.01 };
+        const INITIAL_CAPACITY_DEFAULT = 20;
+        const CAPACITY_PRICE_PER_SLOT = 5000;
+        const MUTATION_BOOST_PRICE_PER_MIN = 10000;
+        const MUTATION_BOOST_DURATION = 60;
+        const ADMIN_PASSWORD = "osiehen";
+
+        const characters = {
+            common: [
+                { name: "I", imageUrl: "c0.png", weight: 10, key: 'c0' },
+                { name: "my", imageUrl: "c1.png", weight: 10, key: 'c1' },
+                { name: "りりりりB", imageUrl: "c2.png", weight: 9, key: 'c2' },
+                { name: "ノーミン", imageUrl: "c3.png", weight: 8, key: 'c3' },
+                { name: "るーらん", imageUrl: "c4.png", weight: 7, key: 'c4' },
+                { name: "りりりりくん", imageUrl: "c5.png", weight: 6, key: 'c5' },
+                { name: "やさいやじん", imageUrl: "c6.png", weight: 5, key: 'c6' },
+            ],
+            rare: [
+                { name: "mine", imageUrl: "r1.png", weight: 10, key: 'r1' },
+                { name: "かめなーにどらごーな", imageUrl: "r2.png", weight: 8, key: 'r2' },
+                { name: "え、あ、そう？そうそそう", imageUrl: "r3.png", weight: 6, key: 'r3' },
+                { name: "レイニー", imageUrl: "r4.png", weight: 5, key: 'r4' },
+                { name: "ぎがりtosすっぴーどlose", imageUrl: "r5.png", weight: 4, key: 'r5' },
+                { name: "よししたぞー", imageUrl: "r6.png", weight: 3, key: 'r6' },
+                { name: "便所inスパゲッティー", imageUrl: "r7.png", weight: 2, key: 'r7' },
+                { name: "僕のごみ", imageUrl: "r8.png", weight: 1, key: 'r8' },
+                { name: "明日は学校の時間だよおお", imageUrl: "r9.png", weight: 1, key: 'r9' },
+                { name: "はるあら", imageUrl: "r10.png", weight: 1, key: 'r10' },
+                { name: "いぬけいラクダ", imageUrl: "r11.png", weight: 0.5, key: 'r11' },
+            ],
+            epic: [
+                { name: "おわりん", imageUrl: "e1.png", weight: 5, key: 'e1' },
+                { name: "すいえいにき", imageUrl: "e2.png", weight: 3, key: 'e2' },
+                { name: "怒喜楽楽", imageUrl: "e3.png", weight: 2, key: 'e3' },
+            ],
+            legendary: [
+                { name: "おにい", imageUrl: "l1.png", weight: 5, key: 'l1' },
+                { name: "がってむ", imageUrl: "l2.png", weight: 4, key: 'l2' },
+                { name: "なきまし", imageUrl: "l3.png", weight: 3, key: 'l3' },
+                { name: "どかえもん", imageUrl: "l4.png", weight: 2, key: 'l4' },
+                { name: "なっちー", imageUrl: "l5.png", weight: 1, key: 'l5' },
+                { name: "ごっどはんでぃんぐF", imageUrl: "l6.png", weight: 0.5, key: 'l6' },
+            ],
+            mythic: [
+                { name: "ラスボス二キ", imageUrl: "m1.png", weight: 4, key: 'm1' },
+                { name: "とっけつー", imageUrl: "m2.png", weight: 2, key: 'm2' },
+                { name: "まがお", imageUrl: "m3.png", weight: 1, key: 'm3' },
+                { name: "ぼう", imageUrl: "m4.png", weight: 0.5, key: 'm4' },
+                { name: "びんどぉんどぉん", imageUrl: "m5.png", weight: 0.4, key: 'm5' },
+                { name: "くりまんじゅうぱいせん", imageUrl: "m6.png", weight: 0.3, key: 'm6' },
+                { name: "おおかわ", imageUrl: "m7.png", weight: 0.2, key: 'm7' },
+                { name: "れーいーせん", imageUrl: "m8.png", weight: 0.1, key: 'm8' },
+            ],
+            penguinGod: [
+                { name: "おさかなくん", imageUrl: "p1.png", weight: 3, key: 'p1' },
+                { name: "とばしすぎくん", imageUrl: "p2.png", weight: 2, key: 'p2' },
+                { name: "オルカ", imageUrl: "p3.png", weight: 1, key: 'p3' },
+                { name: "しかっき雷", imageUrl: "p4.png", weight: 0.5, key: 'p4' },
+                { name: "ごみおかびう", imageUrl: "p5.png", weight: 0.4, key: 'p5' },
+                { name: "とびだしすぎくん", imageUrl: "p6.png", weight: 0.3, key: 'p6' },
+                { name: "ちーかわ", imageUrl: "p7.png", weight: 0.2, key: 'p7' },
+            ],
+            secretPenguin: [
+                { name: "テクペン", imageUrl: "s1.png", weight: 3, key: 's1' },
+                { name: "death脈々銀", imageUrl: "s2.png", weight: 2, key: 's2' },
+                { name: "ドドンパ", imageUrl: "s3.png", weight: 1, key: 's3' },
+                { name: "77", imageUrl: "s4.png", weight: 0.5, key: 's4' },
+                { name: "わきわきぱにっく", imageUrl: "s5.png", weight: 0.2, key: 's5' },
+                { name: "ヒカキソ", imageUrl: "s6.png", weight: 0.1, key: 's6' },
+                { name: "ぷーちゃん", imageUrl: "pik1.png", weight: 0, key: 'pik1' },
+            ],
+            goat: [
+                { name: "書記長", imageUrl: "書記長.png", weight: 1, key: 'goat-shoki' } // 新キャラクター
+            ],
+            bakushi: [
+                { name: "ばっくー", imageUrl: "b1.png", weight: 1, key: 'b1' },
+                { name: "ばく", imageUrl: "b2.png", weight: 1, key: 'b2' },
+                { name: "みそみそ", imageUrl: "b3.png", weight: 1, key: 'b3' },
+                { name: "みそっみ", imageUrl: "b4.png", weight: 1, key: 'b4' },
+                { name: "みっっっｓお", imageUrl: "b5.png", weight: 1, key: 'b5' },
+                { name: "みみそうまし", imageUrl: "b6.png", weight: 1, key: 'b6' },
+                { name: "癒し系へっど", imageUrl: "b7.png", weight: 1, key: 'b7' },
+                { name: "いあああ", imageUrl: "b8.png", weight: 1, key: 'b8' },
+                { name: "year", imageUrl: "b9.png", weight: 1, key: 'b9' },
+                { name: "いぇえええい", imageUrl: "b10.png", weight: 1, key: 'b10' },
+            ],
+            searcret: [
+                { name: "Penguin Combination", imageUrl: "conbination.png", weight: 0, key: 's-combi' },
+                { name: "los combination", imageUrl: "s_los.png", weight: 0, key: 's-los' },
+                { name: "オルカをおるか？", imageUrl: "s_orca.png", weight: 0, key: 's-orca' }
+            ]
+        };
+
+        const fusionRecipes = [
+            {
+                name: "los combination",
+                rewardKey: 's-los',
+                imageUrl: "s_los.png",
+                baseSellValue: 250000,
+                cost: 10,
+                successRate: 0.80,
+                requirements: [
+                    { key: 's2', count: 1 },
+                    { key: 's3', count: 1 }
+                ]
+            },
+            {
+                name: "Penguin Combination",
+                rewardKey: 's-combi',
+                imageUrl: "conbination.png",
+                baseSellValue: 50000,
+                cost: 20000,
+                successRate: 0.10,
+                requirements: [
+                    { key: 's2', count: 1 },
+                    { key: 's3', count: 1 },
+                    { key: 's1', count: 1 }
+                ]
+            },
+            {
+                name: "オルカをおるか？",
+                rewardKey: 's-orca',
+                imageUrl: "s_orca.png",
+                baseSellValue: 18000,
+                cost: 10000,
+                successRate: 0.90,
+                requirements: [
+                    { key: 'p3', count: 1 },
+                    { key: 's2', count: 1 }
+                ]
+            }
+        ];
+
+        const allCharactersMap = {};
+        for (const rarity in characters) {
+            characters[rarity].forEach(char => {
+                let baseSellValue = baseRarityPrices[rarity] || 0;
+                const match = char.key.match(/\d+$/);
+                if (match) {
+                    const charNumber = parseInt(match[0]);
+
+                    if (char.key === 'c0') {
+                        baseSellValue = 10;
+                    } else if (char.rarity === 'mythic' && charNumber >= 5) {
+                        baseSellValue = 1000 + (charNumber * 100);
+                    } else if (char.rarity === 'penguinGod' && charNumber >= 5) {
+                        baseSellValue = 3000 + (charNumber * 500);
+                    } else if (char.key === 's6') {
+                        baseSellValue = 60000;
+                    } else if (char.key === 's4') {
+                        baseSellValue = 7777;
+                    } else if (char.key === 's5') {
+                        baseSellValue = 54321;
+                    } else if (rarity === 'bakushi') {
+                        baseSellValue = Math.floor(Math.random() * 10000) + 1;
+                    } else {
+                        baseSellValue *= charNumber;
+                    }
+                }
+
+                if (rarity === 'searcret') {
+                    if (char.key === 's-combi') baseSellValue = 50000;
+                    else if (char.key === 's-los') baseSellValue = 250000;
+                    else if (char.key === 's-orca') baseSellValue = 18000;
+                }
+
+                if (char.key === 'pik1') baseSellValue = 60001;
+                if (char.key === 'goat-shoki') baseSellValue = 100000;
+
+                allCharactersMap[char.key] = { ...char, rarity: rarity, baseSellValue: baseSellValue };
+            });
+            characters[rarity].totalWeight = characters[rarity].reduce((sum, item) => sum + item.weight, 0);
+        }
+
+        const reversalLevels = [
+            { level: 1, reqCharKey: 'c1', reqCount: 3, reqGold: 1000, reward: { type: 'boost', duration: 60 * 1, multiplier: 10, desc: "1分間、変異確率10倍" } },
+            { level: 2, reqCharKey: 'c1', reqCount: 4, reqGold: 2000, reward: { type: 'boost', duration: 60 * 2, multiplier: 10, desc: "2分間、変異確率10倍" } },
+            { level: 3, reqCharKey: 'c1', reqCount: 5, reqGold: 3000, reward: { type: 'boost', duration: 60 * 3, multiplier: 10, desc: "3分間、変異確率10倍" } },
+            { level: 4, reqCharKey: 'r1', reqCount: 2, reqGold: 4000, reward: { type: 'boost', duration: 60 * 4, multiplier: 10, desc: "4分間、変異確率10倍" } },
+            { level: 5, reqCharKey: 'r1', reqCount: 3, reqGold: 5000, reward: { type: 'boost', duration: 60 * 5, multiplier: 10, desc: "5分間、変異確率10倍" } },
+            { level: 6, reqCharKey: 'l1', reqCount: 1, reqGold: 6000, reward: { type: 'boost', duration: 60 * 6, multiplier: 10, desc: "6分間、変異確率10倍" } },
+            { level: 7, reqCharKey: 'l1', reqCount: 2, reqGold: 7000, reward: { type: 'boost', duration: 60 * 7, multiplier: 10, desc: "7分間、変異確率10倍" } },
+            { level: 8, reqCharKey: 'm1', reqCount: 1, reqGold: 8000, reward: { type: 'boost', duration: 60 * 8, multiplier: 10, desc: "8分間、変異確率10倍" } },
+            { level: 9, reqCharKey: 'p1', reqCount: 1, reqGold: 9000, reward: { type: 'boost', duration: 60 * 9, multiplier: 10, desc: "9分間、変異確率10倍" } },
+            { level: 10, reqCharKey: 'p1', reqCount: 2, reqGold: 10000, reward: { type: 'boost', duration: 60 * 10, multiplier: 10, desc: "10分間、変異確率10倍" } },
+            { level: 11, reqCharKey: 'p3', reqCount: 1, reqGold: 15000, reward: { type: 'boost', duration: 60 * 11, multiplier: 10, desc: "11分間、変異確率10倍" } },
+            { level: 12, reqCharKey: 's1', reqCount: 1, reqGold: 20000, reward: { type: 'boost', duration: 60 * 12, multiplier: 10, desc: "12分間、変異確率10倍" } },
+            { level: 13, reqCharKey: 's2', reqCount: 1, reqGold: 30000, reward: { type: 'boost', duration: 60 * 13, multiplier: 10, desc: "13分間、変異確率10倍" } },
+            { level: 14, reqGold: 40000, requirements: [{ key: 's1', count: 1 }, { key: 's2', count: 1 }], reward: { type: 'boost', duration: 60 * 14, multiplier: 10, desc: "14分間、変異確率10倍" } },
+            { level: 15, reqGold: 50000, requirements: [{ key: 's3', count: 1 }, { key: 's2', count: 1 }, { key: 's1', count: 1 }], reward: { type: 'char', charKey: 's-combi', baseSellValue: 50000, desc: "Searcret: Penguin Combination (50%で変異付与, 通常売却額 50000コイン)" } }
+        ];
+
+        let currentCharacter = null;
+        const gameArea = document.getElementById('gameArea');
+        let autoGenerateIntervalId = null;
+        let updateIntervalId = null;
+        let currentCharacterRarity = '';
+        let capturedCharacters = JSON.parse(localStorage.getItem('capturedList')) || [];
+        let collectedKeysPermanent = JSON.parse(localStorage.getItem('collectedKeysPermanent')) || [];
+        let coins = parseInt(localStorage.getItem('gameCoins')) || 0;
+        let inventoryCapacity = parseInt(localStorage.getItem('inventoryCapacity')) || INITIAL_CAPACITY_DEFAULT;
+        let boosterCount = parseInt(localStorage.getItem('boosterCount')) || 0;
+        let isMutationMode = JSON.parse(localStorage.getItem('isMutationMode')) || false;
+        let selectedCharacterIds = new Set();
+        let reversalLevel = parseInt(localStorage.getItem('reversalLevel')) || 0;
+        let mutationBoostEndTime = parseInt(localStorage.getItem('mutationBoostEndTime')) || 0;
+        let reversalBoostEndTime = parseInt(localStorage.getItem('reversalBoostEndTime')) || 0;
+        let characterEnabledStatus = JSON.parse(localStorage.getItem('characterEnabledStatus')) || {};
+        let isAllCharsForcedOn = JSON.parse(localStorage.getItem('isAllCharsForcedOn')) || false;
+        let gachaTotalCount = parseInt(localStorage.getItem('gachaTotalCount')) || 0;
+        const GACHA_CEILING = 100;
+
+        // Goat用変数
+        let goatMoneyStored = parseInt(localStorage.getItem('goatMoneyStored')) || 0;
+        let isGenerating = false;
+
+        for (const charKey in allCharactersMap) { if (characterEnabledStatus[charKey] === undefined) { characterEnabledStatus[charKey] = true; } }
+
+        function saveCollection() {
+            localStorage.setItem('capturedList', JSON.stringify(capturedCharacters));
+            localStorage.setItem('collectedKeysPermanent', JSON.stringify(collectedKeysPermanent));
+            localStorage.setItem('reversalLevel', reversalLevel.toString());
+            localStorage.setItem('goatMoneyStored', goatMoneyStored.toString());
+            displayCollection();
+            updateCollectedImagesDisplay();
+            updateInventoryDisplay();
+            displayReversalLevels();
+            displayFusionRecipes();
+        }
+
+        function updateCoinDisplay() {
+            document.getElementById('coinDisplay').innerText = `コイン: ${coins.toLocaleString()}`;
+            localStorage.setItem('gameCoins', coins.toString());
+        }
+
+        function updateInventoryDisplay() {
+            const now = Math.floor(Date.now() / 1000);
+            document.getElementById('inventoryCount').innerText = capturedCharacters.length;
+            document.getElementById('inventoryCapacity').innerText = inventoryCapacity;
+            localStorage.setItem('inventoryCapacity', inventoryCapacity.toString());
+
+            const remainingTimeShop = Math.max(0, mutationBoostEndTime - now);
+            const timeStringShop = remainingTimeShop > 0 ? `${Math.floor(remainingTimeShop / 60)}分${remainingTimeShop % 60}秒` : '0';
+            const remainingTimeReversal = Math.max(0, reversalBoostEndTime - now);
+            const timeStringReversal = remainingTimeReversal > 0 ? `${Math.floor(remainingTimeReversal / 60)}分${remainingTimeReversal % 60}秒` : '0';
+
+            const mutationBoostDisplay = document.getElementById('mutationBoostDisplay');
+            if (mutationBoostDisplay) { mutationBoostDisplay.innerText = timeStringShop; }
+            localStorage.setItem('mutationBoostEndTime', mutationBoostEndTime.toString());
+            const reversalBoostDisplay = document.getElementById('reversalBoostDisplay');
+            if (reversalBoostDisplay) { reversalBoostDisplay.innerText = timeStringReversal; }
+            localStorage.setItem('reversalBoostEndTime', reversalBoostEndTime.toString());
+
+            const capacityDisplay = document.querySelector('#collectionHeader p');
+            if (capacityDisplay) {
+                capacityDisplay.innerHTML = `所持枠: <span id="inventoryCount">${capturedCharacters.length}</span> / <span id="inventoryCapacity">${inventoryCapacity}</span> | 所持ブースター: <span id="boosterCountDisplay">${boosterCount}</span>/2 | ショップ変異ブースト: <span id="mutationBoostDisplay">${timeStringShop}</span> | リバース変異ブースト: <span id="reversalBoostDisplay">${timeStringReversal}</span>`;
+            }
+            const reversalDisplay = document.getElementById('currentReversalLevelDisplay');
+            if (reversalDisplay) { reversalDisplay.textContent = reversalLevel; }
+
+            const ceilingDisplay = document.getElementById('ceilingCountDisplay');
+            if (ceilingDisplay) {
+                const remaining = Math.max(0, GACHA_CEILING - gachaTotalCount);
+                ceilingDisplay.innerText = remaining === 0 ? "到達（固定完了）" : remaining;
+            }
+
+            // 書記長マネーの表示制御
+            const goatCount = capturedCharacters.filter(c => c.key === 'goat-shoki').length;
+            const moneyArea = document.getElementById('goatMoneyArea');
+            if (goatCount > 0) {
+                moneyArea.style.display = 'block';
+                document.getElementById('goatMoneyValue').innerText = goatMoneyStored.toLocaleString();
+            } else {
+                moneyArea.style.display = 'none';
+            }
+        }
+
+        // Goatマネー回収
+        function collectGoatMoney() {
+            if (goatMoneyStored > 0) {
+                coins += goatMoneyStored;
+                goatMoneyStored = 0;
+                updateDisplays();
+                alert("コインを回収しました！");
+            }
+        }
+
+        // Goatマネー自動蓄積
+        setInterval(() => {
+            const goatCount = capturedCharacters.filter(c => c.key === 'goat-shoki').length;
+            if (goatCount > 0) {
+                goatMoneyStored += (goatCount * 100);
+                updateInventoryDisplay();
+            }
+        }, 1000);
+
+        function updateBoosterDisplay() { document.getElementById('boosterCountDisplay').innerText = boosterCount; localStorage.setItem('boosterCount', boosterCount.toString()); }
+        function updateDisplays() { updateCoinDisplay(); updateInventoryDisplay(); updateBoosterDisplay(); displayCollection(); updateCollectedImagesDisplay(); displayOwnedCharactersScreen(); displayFusionRecipes(); }
+
+        function displayCollection() {
+            const list = document.getElementById('collectionList');
+            list.innerHTML = '';
+            if (capturedCharacters.length === 0) { list.textContent = 'リストは空です。キャラクターをGETしてください。'; return; }
+            capturedCharacters.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('collectionItem', item.rarity);
+                if (item.isMutated) { itemDiv.classList.add('mutated'); }
+
+                let displaySellValue = item.sellValue;
+                if (item.rarity === 'bakushi') {
+                    displaySellValue = Math.floor(item.sellValue / 8);
+                }
+                const actualPrice = displaySellValue.toLocaleString();
+
+                const rarityLabel = allCharactersMap[item.key] ? allCharactersMap[item.key].rarity : item.rarity;
+                const mutationText = item.isMutated ? `(変異済 x${item.mutationMultiplier}倍)` : '';
+                itemDiv.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" data-id="${item.id}" ${selectedCharacterIds.has(item.id) ? 'checked' : ''} onchange="toggleCharacterSelection(${item.id})">
+                        <img src="${item.imageUrl}" class="character-img" alt="${item.name}">
+                        <span>${item.name} (${rarityLabel} ${mutationText})</span>
+                    </div>
+                    <button onclick="sellCharacterById(${item.id})">売却 (${actualPrice}コイン)</button>
+                `;
+                list.appendChild(itemDiv);
+            });
+            updateInventoryDisplay();
+        }
+
+        function displayOwnedCharactersScreen() {
+            const list = document.getElementById('ownedCharactersList');
+            if (!list) return;
+            list.innerHTML = '';
+            if (capturedCharacters.length === 0) { list.textContent = '所持しているキャラクターがいません。'; return; }
+            capturedCharacters.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                const rarityClass = allCharactersMap[item.key] ? allCharactersMap[item.key].rarity : item.rarity;
+                itemDiv.classList.add('owned-char-item', rarityClass);
+                if (item.isMutated) { itemDiv.classList.add('lightning-effect'); }
+                const mutationText = item.isMutated ? `x${item.mutationMultiplier}` : 'なし';
+                itemDiv.innerHTML = `<img src="${item.imageUrl}" alt="${item.name}"><div class="owned-char-info">${item.name}<br>変異: ${mutationText}</div>`;
+                list.appendChild(itemDiv);
+            });
+        }
+
+        function updateCollectedImagesDisplay() {
+            const container = document.getElementById('collectedImages');
+            container.innerHTML = '';
+            const collectedKeys = new Set(collectedKeysPermanent);
+            const rarityOrder = ['common', 'rare', 'epic', 'legendary', 'mythic', 'penguinGod', 'secretPenguin', 'goat', 'bakushi', 'searcret'];
+            rarityOrder.forEach(rarity => {
+                characters[rarity].forEach(char => {
+                    const charDiv = document.createElement('div');
+                    charDiv.classList.add('char-img-placeholder', rarity);
+                    if (!collectedKeys.has(char.key)) { charDiv.style.opacity = '0.3'; charDiv.textContent = '?'; }
+                    else { const img = document.createElement('img'); img.src = char.imageUrl; charDiv.appendChild(img); }
+                    container.appendChild(charDiv);
+                });
+            });
+        }
+
+        async function generateCharacter() {
+            if (isGenerating) return;
+            isGenerating = true;
+
+            const availableCharacters = [];
+            for (const rarity in characters) {
+                if (rarity === 'searcret' || rarity === 'bakushi') continue;
+                characters[rarity].forEach(char => {
+                    if (char.key === 'pik1') return;
+                    if (characterEnabledStatus[char.key] || isAllCharsForcedOn) { availableCharacters.push({ ...char, rarity: rarity }); }
+                });
+            }
+            if (availableCharacters.length === 0) { document.getElementById('currentCharacterInfo').textContent = "出現可能なキャラクターがいません。"; isGenerating = false; return; }
+
+            const chances = loadChances();
+            let totalWeight = 0;
+            const weightedList = [];
+            for (const rarity in characters) {
+                if (rarity === 'searcret' || rarity === 'bakushi') continue;
+                if (chances[rarity] > 0) {
+                    characters[rarity].forEach(char => {
+                        if (char.key === 'pik1') return;
+                        if (characterEnabledStatus[char.key] || isAllCharsForcedOn) {
+                            weightedList.push({ ...char, rarity: rarity, actualWeight: char.weight * chances[rarity] });
+                            totalWeight += char.weight * chances[rarity];
+                        }
+                    });
+                }
+            }
+            let randomValue = Math.random() * totalWeight;
+            let chosen = null;
+            for (const item of weightedList) { randomValue -= item.actualWeight; if (randomValue <= 0) { chosen = item; break; } }
+
+            // Goat演出
+            if (chosen.rarity === 'goat') {
+                document.getElementById('currentCharacterInfo').textContent = "何かが来る...";
+                document.body.classList.add('goat-flash-effect');
+                await new Promise(r => setTimeout(r, 5000));
+                document.body.classList.remove('goat-flash-effect');
+            }
+
+            currentCharacter = chosen;
+            currentCharacterRarity = chosen.rarity;
+            document.getElementById('currentCharacterInfo').textContent = `出現中: ${currentCharacter.name} (${currentCharacterRarity})`;
+            gameArea.innerHTML = `<img src="${currentCharacter.imageUrl}" class="gameImage" alt="${currentCharacter.name}" id="charImage"><div id="getMessage" style="display: none;">GET!</div>`;
+            isGenerating = false;
+        }
+
+        function captureCharacter() {
+            // 1. キャラクターがいない、または生成中の場合は処理を中断
+            // currentCharacter が null の状態でクリックされても何も起きないようにします
+            if (!currentCharacter || isGenerating) return;
+
+            // 所持枠チェック
+            if (capturedCharacters.length >= inventoryCapacity) {
+                alert("所持枠がいっぱいです！");
+                return;
+            }
+
+            // --- 修正のポイント：即座にキャラクターを「消去」する ---
+            const captured = currentCharacter;       // 処理用に現在のキャラを変数にキープ
+            const capturedRarity = currentCharacterRarity;
+            currentCharacter = null;                // グローバル変数を即座に空にする（連打防止）
+
+            // GET!の文字を表示し、画像を即座に消す（視覚的にも捕獲したことを即座に反映）
+            document.getElementById('getMessage').style.display = 'block';
+            const charImg = document.getElementById('charImage');
+            if (charImg) charImg.style.display = 'none';
+
+            // 2. 変異判定などのロジック（キープしておいた captured 変数を使用）
+            let isMutatedLocal = false;
+            let mutationMultiplier = 1;
+            const rarityRank = ['common', 'rare', 'epic', 'legendary', 'mythic', 'penguinGod', 'secretPenguin', 'goat', 'searcret'].indexOf(capturedRarity);
+
+            let mutationChance = 0;
+            if (rarityRank >= 1) {
+                let baseCharacterChance = (rarityRank >= 5) ? 0.1 : 0.5;
+                const now = Math.floor(Date.now() / 1000);
+                if (isMutationMode || mutationBoostEndTime > now || reversalBoostEndTime > now) {
+                    mutationChance = baseCharacterChance;
+                    if (reversalBoostEndTime > now) mutationChance *= 10;
+                    if (mutationBoostEndTime > now) mutationChance *= 1.5;
+                }
+            }
+
+            if (Math.random() < Math.min(1.0, mutationChance)) {
+                isMutatedLocal = true;
+                mutationMultiplier = Math.floor(Math.random() * 9) + 2;
+                document.body.style.backgroundColor = '#000';
+                setTimeout(() => document.body.style.backgroundColor = '', 50);
+            }
+
+            const basePrice = allCharactersMap[captured.key].baseSellValue;
+
+            // 3. 配列への追加と保存
+            capturedCharacters.push({
+                id: Date.now(),
+                name: captured.name,
+                rarity: capturedRarity,
+                imageUrl: captured.imageUrl,
+                isMutated: isMutatedLocal,
+                sellValue: isMutatedLocal ? basePrice * mutationMultiplier : basePrice,
+                key: captured.key,
+                mutationMultiplier: isMutatedLocal ? mutationMultiplier : 1
+            });
+
+            if (!collectedKeysPermanent.includes(captured.key)) {
+                collectedKeysPermanent.push(captured.key);
+            }
+
+            saveCollection();
+
+            // 4. 次のキャラクターへ即座に切り替える
+            // 以前は setTimeout 内で skipTimerAndGenerate を呼んでいましたが、
+            // 「即座に」という要望に合わせて関数の外（直後）で呼び出します。
+
+            setTimeout(() => {
+                document.getElementById('getMessage').style.display = 'none';
+            }, 300);
+
+            // 5秒待たずに即座に再生成
+            skipTimerAndGenerate();
+        }
+        function startAutoGeneration() { if (autoGenerateIntervalId) clearInterval(autoGenerateIntervalId); autoGenerateIntervalId = setInterval(generateCharacter, 5000); if (updateIntervalId) clearInterval(updateIntervalId); updateIntervalId = setInterval(updateInventoryDisplay, 1000); }
+        function skipTimerAndGenerate() { if (isGenerating) return; clearInterval(autoGenerateIntervalId); generateCharacter(); startAutoGeneration(); }
+        function toggleCharacterSelection(id) { if (selectedCharacterIds.has(id)) selectedCharacterIds.delete(id); else selectedCharacterIds.add(id); displayCollection(); }
+        function clearSelection() { selectedCharacterIds.clear(); displayCollection(); }
+
+        function sellCharacterById(id) {
+            const index = capturedCharacters.findIndex(char => char.id === id);
+            if (index !== -1) {
+                const char = capturedCharacters[index];
+                const rarity = allCharactersMap[char.key] ? allCharactersMap[char.key].rarity : char.rarity;
+                if (rarity === 'secretPenguin' || rarity === 'searcret' || rarity === 'goat') { if (!confirm("激レアキャラクターを本当に売却する？")) { return; } }
+
+                let finalVal = char.sellValue;
+                if (rarity === 'bakushi') finalVal = Math.floor(char.sellValue / 8);
+
+                coins += finalVal;
+                capturedCharacters.splice(index, 1);
+                selectedCharacterIds.delete(id);
+                updateDisplays();
+            }
+        }
+
+        function sellSelectedCharacters() {
+            let totalSale = 0; let containsSecret = false;
+            capturedCharacters.forEach(char => {
+                if (selectedCharacterIds.has(char.id)) {
+                    const rarity = allCharactersMap[char.key] ? allCharactersMap[char.key].rarity : char.rarity;
+                    let val = char.sellValue;
+                    if (rarity === 'bakushi') val = Math.floor(char.sellValue / 8);
+                    totalSale += val;
+                    if (rarity === 'secretPenguin' || rarity === 'searcret' || rarity === 'goat') containsSecret = true;
+                }
+            });
+            let message = `選択したキャラクターを売却して ${totalSale.toLocaleString()} コインを受け取りますか？`;
+            if (containsSecret) { message = "【警告】選択した中にレアキャラクターが含まれています！\n" + message; }
+            if (confirm(message)) { capturedCharacters = capturedCharacters.filter(char => !selectedCharacterIds.has(char.id)); coins += totalSale; selectedCharacterIds.clear(); updateDisplays(); }
+        }
+
+        function sellAllCharacters() {
+            const totalSale = capturedCharacters.reduce((sum, char) => {
+                let val = char.sellValue;
+                if (char.rarity === 'bakushi') val = Math.floor(char.sellValue / 8);
+                return sum + val;
+            }, 0);
+            if (confirm(`全て売却して ${totalSale.toLocaleString()} コインを受け取りますか？`)) { coins += totalSale; capturedCharacters = []; selectedCharacterIds.clear(); updateDisplays(); }
+        }
+
+        function sellAllExceptSecret() { sellCharactersByExclusion(['secretPenguin', 'searcret', 'goat'], "シークレット以外売却"); }
+        function sellAllExceptPenguinGodAndSecret() { sellCharactersByExclusion(['penguinGod', 'secretPenguin', 'searcret', 'goat'], "P-God & シク以外売却"); }
+        function sellCharactersByExclusion(raritiesToKeep, buttonText) {
+            let totalSale = 0; const kept = [];
+            capturedCharacters.forEach(char => {
+                const r = allCharactersMap[char.key] ? allCharactersMap[char.key].rarity : char.rarity;
+                if (raritiesToKeep.includes(r)) kept.push(char);
+                else {
+                    let val = char.sellValue;
+                    if (r === 'bakushi') val = Math.floor(char.sellValue / 8);
+                    totalSale += val;
+                }
+            });
+            if (confirm(`${buttonText}を実行して ${totalSale.toLocaleString()} コインを受け取りますか？`)) { capturedCharacters = kept; coins += totalSale; selectedCharacterIds.clear(); updateDisplays(); }
+        }
+
+        function showUserScreen() { hideAllScreens(); document.getElementById('userScreen').classList.remove('hidden'); }
+        function showShopScreen() { hideAllScreens(); document.getElementById('shopScreen').classList.remove('hidden'); }
+        function showOwnedCharactersScreen() { hideAllScreens(); document.getElementById('ownedCharactersScreen').classList.remove('hidden'); displayOwnedCharactersScreen(); }
+        function showCollectionScreen() { hideAllScreens(); document.getElementById('collectionScreen').classList.remove('hidden'); updateCollectedImagesDisplay(); }
+        function showReversalScreen() { hideAllScreens(); document.getElementById('reversalScreen').classList.remove('hidden'); displayReversalLevels(); }
+        function showFusionScreen() { hideAllScreens(); document.getElementById('fusionScreen').classList.remove('hidden'); displayFusionRecipes(); }
+        function showAdminScreen() { if (prompt("パスワードを入力") === ADMIN_PASSWORD) { hideAllScreens(); document.getElementById('adminScreen').classList.remove('hidden'); loadChancesForAdmin(); displayCharOnOff(); } else { alert("パスワードが違います"); } }
+        function hideAllScreens() { ['userScreen', 'shopScreen', 'ownedCharactersScreen', 'collectionScreen', 'reversalScreen', 'fusionScreen', 'adminScreen'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+
+        function updateCapacityCost() { const val = document.getElementById('capacityRange').value; document.getElementById('capacityQuantity').innerText = val + "枠"; document.getElementById('capacityCost').innerText = " (合計 " + (val * CAPACITY_PRICE_PER_SLOT).toLocaleString() + "コイン)"; }
+        function buyInventoryCapacitySlider() { const val = parseInt(document.getElementById('capacityRange').value); const cost = val * CAPACITY_PRICE_PER_SLOT; if (coins >= cost) { coins -= cost; inventoryCapacity += val; updateDisplays(); alert(val + "枠購入しました"); } else { alert("コイン不足"); } }
+        function updateMutationBoostCost() { const val = document.getElementById('mutationBoostRange').value; document.getElementById('mutationBoostQuantity').innerText = val + "分"; document.getElementById('mutationBoostCost').innerText = " (合計 " + (val * MUTATION_BOOST_PRICE_PER_MIN).toLocaleString() + "コイン)"; }
+        function buyMutationBoostSlider() { const mins = parseInt(document.getElementById('mutationBoostRange').value); const cost = mins * MUTATION_BOOST_PRICE_PER_MIN; if (coins >= cost) { coins -= cost; mutationBoostEndTime = Math.max(Math.floor(Date.now() / 1000), mutationBoostEndTime) + (mins * 60); updateDisplays(); alert(mins + "分間の変異ブーストを購入しました"); } else { alert("コイン不足"); } }
+        function buyBooster() { if (boosterCount < 2) { if (coins >= 99999999999) { coins -= 99999999999; boosterCount++; updateBoosterDisplay(); updateCoinDisplay(); } else { alert("コイン不足"); } } else { alert("最大数です"); } }
+
+        async function playGacha(count) {
+            const cost = count === 1 ? 10000 : 90000;
+            if (coins < cost) { alert("コインが足りません！"); return; }
+            if (capturedCharacters.length + count > inventoryCapacity) { alert("所持枠が足りません！"); return; }
+
+            coins -= cost;
+            if (gachaTotalCount < GACHA_CEILING) {
+                gachaTotalCount += count;
+                if (gachaTotalCount > GACHA_CEILING) gachaTotalCount = GACHA_CEILING;
+                localStorage.setItem('gachaTotalCount', gachaTotalCount.toString());
+            }
+            updateCoinDisplay();
+
+            const overlay = document.getElementById('gachaOverlay');
+            const animeImg = document.getElementById('gachaAnimationImg');
+            overlay.style.visibility = 'visible';
+            animeImg.src = "gr.png";
+
+            let results = [];
+            let hasAtari = false;
+            for (let i = 0; i < count; i++) {
+                let char;
+                let isMutated = Math.random() < 0.10;
+                if (Math.random() < 0.01) {
+                    char = { ...allCharactersMap['pik1'] };
+                    hasAtari = true;
+                } else {
+                    const bKey = 'b' + (Math.floor(Math.random() * 10) + 1);
+                    char = { ...allCharactersMap[bKey] };
+                    if (gachaTotalCount >= GACHA_CEILING) {
+                        const fixedNames = {
+                            b1: "ばっくー", b2: "ばく", b3: "みそみそ", b4: "みそっみ", b5: "みっっっｓお",
+                            b6: "みみそうまし", b7: "癒し系へっど", b8: "いあああ", b9: "year", b10: "いぇえええい"
+                        };
+                        char.name = fixedNames[bKey];
+                    }
+                    char.baseSellValue = Math.floor(Math.random() * 10000) + 1;
+                }
+
+                let multiplier = isMutated ? (Math.floor(Math.random() * 9) + 2) : 1;
+                results.push({
+                    ...char,
+                    id: Date.now() + i,
+                    isMutated: isMutated,
+                    mutationMultiplier: multiplier,
+                    sellValue: char.baseSellValue * multiplier
+                });
+            }
+
+            await new Promise(r => setTimeout(r, 1500));
+
+            if (hasAtari) {
+                animeImg.src = "atari.png";
+                animeImg.classList.add('atari-effect');
+                await new Promise(r => setTimeout(r, 2000));
+            } else {
+                animeImg.src = "hazure.png";
+                await new Promise(r => setTimeout(r, 1500));
+            }
+
+            animeImg.classList.remove('atari-effect');
+            animeImg.classList.add('explosion');
+            await new Promise(r => setTimeout(r, 500));
+
+            overlay.style.visibility = 'hidden';
+            animeImg.classList.remove('explosion');
+
+            showGachaResults(results);
+
+            results.forEach(res => {
+                capturedCharacters.push(res);
+                if (!collectedKeysPermanent.includes(res.key)) collectedKeysPermanent.push(res.key);
+            });
+            saveCollection();
+            updateDisplays();
+        }
+
+        function showGachaResults(results) {
+            const list = document.getElementById('gachaResultList');
+            list.innerHTML = '';
+            results.forEach(res => {
+                const div = document.createElement('div');
+                div.style.padding = "5px";
+                div.style.border = "1px solid #ccc";
+                div.innerHTML = `
+                    <img src="${res.imageUrl}" style="width:100%;"><br>
+                    <small>${res.name}</small><br>
+                    <small style="color:red;">${res.isMutated ? '変異!' : ''}</small>
+                `;
+                list.appendChild(div);
+            });
+            document.getElementById('gachaResultDisplay').style.display = 'block';
+        }
+
+        function closeGachaResult() {
+            document.getElementById('gachaResultDisplay').style.display = 'none';
+        }
+
+        function displayReversalLevels() {
+            const container = document.getElementById('reversalLevels'); container.innerHTML = '';
+            reversalLevels.forEach(lv => {
+                const div = document.createElement('div'); div.className = 'reversalItem';
+                let reqHtml = '';
+                if (lv.reqCharKey) {
+                    const char = allCharactersMap[lv.reqCharKey];
+                    const count = capturedCharacters.filter(c => c.key === lv.reqCharKey).length;
+                    reqHtml = `<span class="reversalRequirement"><img src="${char.imageUrl}" class="character-img" alt="${char.name}">${char.name} x${lv.reqCount} (所持: ${count})</span>`;
+                } else if (lv.requirements) {
+                    lv.requirements.forEach(r => {
+                        const char = allCharactersMap[r.key];
+                        const count = capturedCharacters.filter(c => c.key === r.key).length;
+                        reqHtml += `<span class="reversalRequirement"><img src="${char.imageUrl}" class="character-img" alt="${char.name}">${char.name} x${r.count} (所持: ${count})</span>`;
+                    });
+                }
+                div.innerHTML = `<h3>レベル ${lv.level}</h3><p>必要: ${reqHtml} + ${lv.reqGold}コイン</p><p>報酬: ${lv.reward.desc}</p>` +
+                    (reversalLevel >= lv.level ? '<p style="color:blue;">達成済み</p>' : `<button onclick="attemptReversal(${lv.level})">リバース実行</button>`);
+                container.appendChild(div);
+            });
+        }
+        function attemptReversal(level) {
+            const lv = reversalLevels.find(l => l.level === level);
+            if (reversalLevel !== level - 1) { alert("前のレベルを達成してください"); return; }
+            if (coins < lv.reqGold) { alert("コイン不足"); return; }
+            let toRemove = [];
+            if (lv.reqCharKey) {
+                const found = capturedCharacters.filter(c => c.key === lv.reqCharKey);
+                if (found.length < lv.reqCount) { alert("キャラ不足"); return; }
+                toRemove = found.slice(0, lv.reqCount).map(c => c.id);
+            } else if (lv.requirements) {
+                for (let r of lv.requirements) {
+                    const found = capturedCharacters.filter(c => c.key === r.key);
+                    if (found.length < r.count) { alert("キャラ不足"); return; }
+                    toRemove.push(...found.slice(0, r.count).map(c => c.id));
+                }
+            }
+            coins -= lv.reqGold; capturedCharacters = capturedCharacters.filter(c => !toRemove.includes(c.id));
+            reversalLevel = level;
+            if (lv.reward.type === 'boost') reversalBoostEndTime = Math.max(Math.floor(Date.now() / 1000), reversalBoostEndTime) + lv.reward.duration;
+            else if (lv.reward.type === 'char') {
+                const c = allCharactersMap[lv.reward.charKey];
+                const isMutated = Math.random() < 0.5;
+                const mutationMultiplier = isMutated ? (Math.floor(Math.random() * 9) + 2) : 1;
+                capturedCharacters.push({ id: Date.now(), name: c.name, rarity: 'searcret', imageUrl: c.imageUrl, isMutated: isMutated, sellValue: isMutated ? 50000 * mutationMultiplier : 50000, key: c.key, mutationMultiplier: mutationMultiplier });
+                if (!collectedKeysPermanent.includes(c.key)) collectedKeysPermanent.push(c.key);
+            }
+            saveCollection(); updateDisplays(); alert("リバース成功！");
+        }
+
+        function displayFusionRecipes() {
+            const container = document.getElementById('fusionRecipes'); container.innerHTML = '';
+            fusionRecipes.forEach((recipe, idx) => {
+                const div = document.createElement('div'); div.className = 'fusionRecipe';
+                let reqHtml = recipe.requirements.map(r => {
+                    const count = capturedCharacters.filter(c => c.key === r.key).length;
+                    return `<span class="fusionRequirement">${allCharactersMap[r.key].name} x${r.count} (所持: ${count})</span>`;
+                }).join('');
+
+                let materialOptionsHtml = '<div class="fusion-material-list">';
+                recipe.requirements.forEach(r => {
+                    const owned = capturedCharacters.filter(c => c.key === r.key);
+                    materialOptionsHtml += `<p>【${allCharactersMap[r.key].name} を選択 (必要数: ${r.count})】</p>`;
+                    if (owned.length === 0) { materialOptionsHtml += `<p style="color:red;">(素材なし)</p>`; }
+                    else {
+                        owned.forEach(char => {
+                            const mutationLabel = char.isMutated ? ` [変異x${char.mutationMultiplier}]` : "";
+                            materialOptionsHtml += `<label><input type="checkbox" class="fusion-checkbox-${idx}" data-char-id="${char.id}" data-key="${char.key}" data-mutated="${char.isMutated}" onchange="checkFusionLimit(${idx}, '${r.key}', ${r.count})"><img src="${char.imageUrl}" class="fusion-material-img"> ${char.name}${mutationLabel}</label><br>`;
+                        });
+                    }
+                });
+                materialOptionsHtml += '</div>';
+
+                div.innerHTML = `<h3>${recipe.name}</h3><img src="${recipe.imageUrl}" class="fusion-char-img"><p>必要: ${reqHtml} + ${recipe.cost}コイン</p>
+                                 ${materialOptionsHtml}
+                                 <p>成功率: ${recipe.successRate * 100}% (変異素材が含まれる場合、確定で変異継承)</p>
+                                 <div style="display: flex; gap: 10px;">
+                                    <button onclick="attemptFusion(${idx})">合成実行</button>
+                                    <button onclick="autoFusionUntilSuccess(${idx})" style="background-color: #ffda73;">成功するまで実行</button>
+                                 </div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function checkFusionLimit(recipeIdx, charKey, maxCount) {
+            const checkboxes = document.querySelectorAll(`.fusion-checkbox-${recipeIdx}[data-key="${charKey}"]`);
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            if (checkedCount > maxCount) {
+                alert(`${allCharactersMap[charKey].name}は${maxCount}体までしか選択できません。`);
+                event.target.checked = false;
+            }
+        }
+
+        function attemptFusion(idx) {
+            const recipe = fusionRecipes[idx];
+            if (coins < recipe.cost) { alert("コイン不足"); return; }
+            const checkboxes = document.querySelectorAll(`.fusion-checkbox-${idx}:checked`);
+            const selectedIds = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-char-id')));
+            const selectedKeys = Array.from(checkboxes).map(cb => cb.getAttribute('data-key'));
+            const anyMutated = Array.from(checkboxes).some(cb => cb.getAttribute('data-mutated') === "true");
+
+            for (let r of recipe.requirements) {
+                const count = selectedKeys.filter(k => k === r.key).length;
+                if (count < r.count) { alert(`素材不足: ${allCharactersMap[r.key].name} を ${r.count}体選んでください`); return; }
+            }
+            if (selectedIds.length !== recipe.requirements.reduce((sum, r) => sum + r.count, 0)) { alert("選択数がレシピと一致しません"); return; }
+
+            coins -= recipe.cost;
+            capturedCharacters = capturedCharacters.filter(c => !selectedIds.includes(c.id));
+
+            if (Math.random() < recipe.successRate) {
+                const c = allCharactersMap[recipe.rewardKey];
+                let isMutatedLocal = anyMutated ? true : (Math.random() < 0.10);
+                let mutationMultiplier = isMutatedLocal ? (Math.floor(Math.random() * 9) + 2) : 1;
+                let finalSellValue = isMutatedLocal ? recipe.baseSellValue * mutationMultiplier : recipe.baseSellValue;
+
+                capturedCharacters.push({ id: Date.now(), name: c.name, rarity: 'searcret', imageUrl: c.imageUrl, isMutated: isMutatedLocal, sellValue: finalSellValue, key: c.key, mutationMultiplier: mutationMultiplier });
+                if (!collectedKeysPermanent.includes(c.key)) { collectedKeysPermanent.push(c.key); }
+                alert(`合成成功！ ${c.name}${isMutatedLocal ? " (変異！)" : ""} をGET！`);
+            } else { alert("合成失敗..."); }
+            saveCollection(); updateDisplays();
+        }
+
+        async function autoFusionUntilSuccess(idx) {
+            const recipe = fusionRecipes[idx];
+            if (!confirm(`${recipe.name}を成功するまで自動で合成しますか？\n(素材やコインがなくなると終了します)`)) return;
+
+            let success = false;
+            let attempts = 0;
+
+            while (!success) {
+                attempts++;
+                if (coins < recipe.cost) {
+                    alert(`${attempts}回目の試行でコインが不足しました。自動合成を終了します。`);
+                    break;
+                }
+
+                let selectedIds = [];
+                let anyMutated = false;
+                let enoughMaterials = true;
+
+                for (let req of recipe.requirements) {
+                    const owned = capturedCharacters.filter(c => c.key === req.key);
+                    if (owned.length < req.count) {
+                        alert(`${attempts}回目の試行で素材(${allCharactersMap[req.key].name})が不足しました。`);
+                        enoughMaterials = false;
+                        break;
+                    }
+                    const materials = owned.slice(0, req.count);
+                    materials.forEach(m => {
+                        selectedIds.push(m.id);
+                        if (m.isMutated) anyMutated = true;
+                    });
+                }
+
+                if (!enoughMaterials) break;
+
+                coins -= recipe.cost;
+                capturedCharacters = capturedCharacters.filter(c => !selectedIds.includes(c.id));
+
+                if (Math.random() < recipe.successRate) {
+                    const c = allCharactersMap[recipe.rewardKey];
+                    let isMutatedLocal = anyMutated ? true : (Math.random() < 0.10);
+                    let mutationMultiplier = isMutatedLocal ? (Math.floor(Math.random() * 9) + 2) : 1;
+                    let finalSellValue = isMutatedLocal ? recipe.baseSellValue * mutationMultiplier : recipe.baseSellValue;
+
+                    capturedCharacters.push({ id: Date.now(), name: c.name, rarity: 'searcret', imageUrl: c.imageUrl, isMutated: isMutatedLocal, sellValue: finalSellValue, key: c.key, mutationMultiplier: mutationMultiplier });
+                    if (!collectedKeysPermanent.includes(c.key)) { collectedKeysPermanent.push(c.key); }
+
+                    saveCollection(); updateDisplays();
+                    alert(`${attempts}回目で成功！ ${c.name}をGETしました！`);
+                    success = true;
+                } else {
+                    saveCollection(); updateDisplays();
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+            }
+        }
+
+        function loadChances() { return JSON.parse(localStorage.getItem('spawnChances')) || defaultChances; }
+        function loadChancesForAdmin() {
+            const c = loadChances();
+            ['common', 'rare', 'epic', 'legendary', 'mythic', 'penguinGod', 'secretPenguin', 'goat'].forEach(r => {
+                const input = document.getElementById('chance_' + r);
+                if (input) {
+                    input.value = c[r];
+                    document.getElementById('prob_' + r).innerText = c[r];
+                }
+            });
+            document.getElementById('adminInitialCapacity').value = inventoryCapacity;
+            document.getElementById('mutationModeToggle').checked = isMutationMode;
+            document.getElementById('allCharsForcedOnToggle').checked = isAllCharsForcedOn;
+            document.getElementById('adminReversalLevel').value = reversalLevel;
+            const sel = document.getElementById('adminCharSelector'); sel.innerHTML = '';
+            for (let k in allCharactersMap) { let opt = document.createElement('option'); opt.value = k; opt.innerText = allCharactersMap[k].name; sel.appendChild(opt); }
+        }
+
+        function resetChancesAdmin() {
+            if (confirm("全ての確率をデフォルトに戻しますか？")) {
+                localStorage.removeItem('spawnChances');
+                loadChancesForAdmin();
+                saveCollection();
+                alert("確率をデフォルトにリセットしました");
+            }
+        }
+
+        function saveAdminSettings() {
+            const newC = {}; let sum = 0;
+            ['common', 'rare', 'epic', 'legendary', 'mythic', 'penguinGod', 'secretPenguin', 'goat'].forEach(r => {
+                const val = parseFloat(document.getElementById('chance_' + r).value) || 0;
+                newC[r] = val; sum += val;
+            });
+            if (Math.abs(sum - 100) > 0.001) { alert("合計を100%にしてください (現在: " + sum + "%)"); return; }
+            localStorage.setItem('spawnChances', JSON.stringify(newC));
+            inventoryCapacity = parseInt(document.getElementById('adminInitialCapacity').value);
+            isMutationMode = document.getElementById('mutationModeToggle').checked;
+            isAllCharsForcedOn = document.getElementById('allCharsForcedOnToggle').checked;
+            reversalLevel = parseInt(document.getElementById('adminReversalLevel').value);
+            localStorage.setItem('isMutationMode', JSON.stringify(isMutationMode));
+            localStorage.setItem('isAllCharsForcedOn', JSON.stringify(isAllCharsForcedOn));
+            localStorage.setItem('reversalLevel', reversalLevel.toString());
+            saveCollection(); updateDisplays(); alert("保存しました");
+        }
+        function adminGenerateSpecificCharacter() {
+            const key = document.getElementById('adminCharSelector').value;
+            currentCharacter = allCharactersMap[key]; currentCharacterRarity = currentCharacter.rarity;
+            document.getElementById('currentCharacterInfo').textContent = `出現中: ${currentCharacter.name} (${currentCharacterRarity})`;
+            gameArea.innerHTML = `<img src="${currentCharacter.imageUrl}" class="gameImage"><div id="getMessage" style="display: none;">GET!</div>`;
+        }
+        function displayCharOnOff() {
+            const area = document.getElementById('charOnOffArea'); area.innerHTML = '';
+            for (let k in allCharactersMap) {
+                const d = document.createElement('div');
+                d.innerHTML = `<label><input type="checkbox" class="char-enable-check" data-key="${k}" ${characterEnabledStatus[k] ? 'checked' : ''}> ${allCharactersMap[k].name} (${allCharactersMap[k].rarity})</label>`;
+                area.appendChild(d);
+            }
+        }
+        function saveCharacterEnabledStatus() { document.querySelectorAll('.char-enable-check').forEach(cb => { characterEnabledStatus[cb.dataset.key] = cb.checked; }); localStorage.setItem('characterEnabledStatus', JSON.stringify(characterEnabledStatus)); alert("保存しました"); }
+        function addCoins(amt) { coins += amt; updateCoinDisplay(); }
+        function resetGameData() { if (confirm("リセットしますか？")) { localStorage.clear(); location.reload(); } }
+
+        function getPenguinCombinationAdmin() {
+            const c = allCharactersMap['s-combi'];
+            if (!c) { alert("エラー: キャラクターデータが見つかりません"); return; }
+            if (capturedCharacters.length >= inventoryCapacity) { alert("所持枠がいっぱいです！"); return; }
+
+            const isMutated = Math.random() < 0.5;
+            const mutationMultiplier = isMutated ? (Math.floor(Math.random() * 9) + 2) : 1;
+
+            capturedCharacters.push({
+                id: Date.now(),
+                name: c.name,
+                rarity: 'searcret',
+                imageUrl: c.imageUrl,
+                isMutated: isMutated,
+                sellValue: isMutated ? c.baseSellValue * mutationMultiplier : c.baseSellValue,
+                key: c.key,
+                mutationMultiplier: mutationMultiplier
+            });
+
+            if (!collectedKeysPermanent.includes(c.key)) collectedKeysPermanent.push(c.key);
+            saveCollection();
+            updateDisplays();
+            alert("Penguin Combination（統合版）をゲット！");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDisplays(); generateCharacter(); startAutoGeneration(); showUserScreen(); updateCapacityCost(); updateMutationBoostCost();
+        });
+        // ボスデータ
+        const bossData = {
+            'if1': { name: "ペンギン王", hp: 100000, atk: 3000, dropRate: 0.1, coinValue: 12321, img: "if1.png" },
+            'if': { name: "泥団子ペンギン", hp: 200000, atk: 5000, dropRate: 0.05, coinValue: 32111, img: "if.png" },
+            'if3': { name: "ペンギンking", hp: 200000, atk: 50000, dropRate: 0.01, coinValue: 54322, img: "if3.png" }
+        };
+
+        let currentBoss = null;
+        let selectedParty = [];
+        let battleState = { bossHp: 0, playerHp: 0, playerAtk: 0, lastSpaceTime: 0, isBattle: false };
+
+        // 画面切り替え関数
+        function showBossBattleScreen() {
+            hideAllScreens();
+            document.getElementById('bossBattleScreen').classList.remove('hidden');
+            document.getElementById('bossSelectionArea').classList.remove('hidden');
+            document.getElementById('partySetupArea').classList.add('hidden');
+            document.getElementById('battleActiveArea').classList.add('hidden');
+        }
+
+        function hideAllScreens() {
+            ['userScreen', 'shopScreen', 'ownedCharactersScreen', 'collectionScreen', 'reversalScreen', 'fusionScreen', 'adminScreen', 'bossBattleScreen']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+        }
+
+        // 準備画面（パーティ選択）
+        // 準備画面（パーティ選択）
+        function prepareBattle(bossKey) {
+            currentBoss = { ...bossData[bossKey], key: bossKey };
+            selectedParty = [];
+
+            // 売却額（変異込み）が高い順に5体自動選択（編成自体は強いキャラを選ぶ）
+            const sortedOwned = [...capturedCharacters].sort((a, b) => b.sellValue - a.sellValue);
+            selectedParty = sortedOwned.slice(0, 5);
+
+            if (selectedParty.length < 1) {
+                alert("戦うためのキャラクターがいません！");
+                return;
+            }
+
+            document.getElementById('bossSelectionArea').classList.add('hidden');
+            document.getElementById('partySetupArea').classList.remove('hidden');
+
+            const slots = document.getElementById('partySlots').children;
+            for (let i = 0; i < 5; i++) {
+                slots[i].innerHTML = selectedParty[i] ? `<img src="${selectedParty[i].imageUrl}" title="${selectedParty[i].name}">` : (i + 1);
+            }
+
+            // --- 修正箇所：変異倍率を無視して基礎値(baseSellValue)でステータスを計算 ---
+            const totalBaseValue = selectedParty.reduce((sum, c) => {
+                // allCharactersMapから変異前の基礎価格を取得
+                const base = allCharactersMap[c.key] ? allCharactersMap[c.key].baseSellValue : 0;
+                return sum + base;
+            }, 0);
+
+            battleState.playerHp = totalBaseValue * 2;
+            battleState.playerAtk = Math.floor(totalBaseValue / 6);
+            // ---------------------------------------------------------
+
+            document.getElementById('playerStatsPreview').innerText =
+                `パーティHP: ${battleState.playerHp.toLocaleString()} | 攻撃力: ${battleState.playerAtk.toLocaleString()} (変異無効化済み)`;
+        }
+
+        // 戦闘開始
+        function startBossFight() {
+            document.getElementById('partySetupArea').classList.add('hidden');
+            document.getElementById('battleActiveArea').classList.remove('hidden');
+
+            battleState.bossHp = currentBoss.hp;
+            battleState.maxBossHp = currentBoss.hp;
+            battleState.maxPlayerHp = battleState.playerHp;
+            battleState.isBattle = true;
+            battleState.lastSpaceTime = Date.now();
+
+            document.getElementById('activeBossName').innerText = currentBoss.name;
+            document.getElementById('activeBossImg').src = currentBoss.img;
+            updateBattleDisplay();
+
+            document.getElementById('rhythmIndicator').innerText = "スペースキーで攻撃！";
+        }
+
+        // リズム入力処理
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && battleState.isBattle) {
+                const now = Date.now();
+                const diff = (now - battleState.lastSpaceTime) / 1000;
+
+                if (diff < 2) return; // 2秒に1回の制限
+
+                e.preventDefault();
+                attackSequence(now);
+                battleState.lastSpaceTime = now;
+            }
+        });
+
+        function attackSequence(hitTime) {
+            const indicator = document.getElementById('rhythmIndicator');
+            // リズム判定 (簡易的に。実際はターゲットに合わせて押す形)
+            // ここでは「2.0秒にちょうど押せたか」に近い判定
+            indicator.classList.remove('perfect-text');
+
+            let damage = battleState.playerAtk;
+            indicator.innerText = "ATTACK!";
+
+            // 0.3秒以内のリズムボーナス（演出として）
+            const isPerfect = Math.random() < 0.3; // 簡易的に確率判定。本来はタイミング。
+            if (isPerfect) {
+                damage *= 2;
+                indicator.innerText = "PERFECT!!";
+                indicator.classList.add('perfect-text');
+            }
+
+            // プレイヤーの攻撃
+            battleState.bossHp -= damage;
+
+            // ボスの反撃
+            let bossDmg = currentBoss.atk;
+            if (Math.random() < 0.15) { // 15%でクリティカル
+                bossDmg *= 2;
+                indicator.innerText += " / ボス痛恨の一撃！";
+            }
+            battleState.playerHp -= bossDmg;
+
+            updateBattleDisplay();
+            checkBattleEnd();
+        }
+
+        function updateBattleDisplay() {
+            const bPercent = Math.max(0, (battleState.bossHp / battleState.maxBossHp) * 100);
+            const pPercent = Math.max(0, (battleState.playerHp / battleState.maxPlayerHp) * 100);
+
+            document.getElementById('bossHpBar').style.width = bPercent + "%";
+            document.getElementById('playerHpBar').style.width = pPercent + "%";
+            document.getElementById('bossHpText').innerText = `${Math.max(0, battleState.bossHp).toLocaleString()} / ${battleState.maxBossHp.toLocaleString()}`;
+            document.getElementById('playerHpText').innerText = `${Math.max(0, battleState.playerHp).toLocaleString()} / ${battleState.maxPlayerHp.toLocaleString()}`;
+        }
+
+        function checkBattleEnd() {
+            if (battleState.bossHp <= 0) {
+                battleState.isBattle = false;
+                winBattle();
+            } else if (battleState.playerHp <= 0) {
+                battleState.isBattle = false;
+                alert("敗北しました...");
+                showBossBattleScreen();
+            }
+        }
+
+        function winBattle() {
+            alert(`${currentBoss.name}を倒した！`);
+
+            // ドロップ判定
+            if (Math.random() < currentBoss.dropRate) {
+                if (capturedCharacters.length >= inventoryCapacity) {
+                    alert("所持枠がいっぱいでドロップキャラを逃しました！");
+                } else {
+                    const isMutated = Math.random() < 0.1; // 10%で変異
+                    const mutationMultiplier = isMutated ? (Math.floor(Math.random() * 9) + 2) : 1;
+
+                    const newChar = {
+                        id: Date.now(),
+                        name: currentBoss.name,
+                        rarity: 'searcret', // ボスドロップは特別枠
+                        imageUrl: currentBoss.img,
+                        isMutated: isMutated,
+                        sellValue: currentBoss.coinValue * mutationMultiplier,
+                        key: currentBoss.key,
+                        mutationMultiplier: mutationMultiplier
+                    };
+
+                    capturedCharacters.push(newChar);
+                    if (!collectedKeysPermanent.includes(newChar.key)) collectedKeysPermanent.push(newChar.key);
+                    alert(`幸運！ ${currentBoss.name} が仲間になった！ ${isMutated ? '(変異個体！)' : ''}`);
+                }
+            } else {
+                alert("キャラはドロップしませんでした。");
+            }
+
+            saveCollection();
+            updateDisplays();
+            showBossBattleScreen();
+        }
+
+        function cancelBattle() {
+            showBossBattleScreen();
+        }
+    </script>
+</body>
+
+</html>
